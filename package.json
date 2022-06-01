@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "@types/better-sqlite3": "^7.5.0",
+    "@types/sqlite3": "^3.1.8",
+    "better-sqlite3": "^7.5.3",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.1",
+    "form-data": "^4.0.0",
+    "formdata-node": "^4.3.2",
+    "node-fetch": "^3.2.4",
+    "quick.db": "^9.0.2",
+    "request": "^2.88.2",
+    "sqlite3": "^5.0.8"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.1",
+    "typescript": "^4.7.2"
+  },
+  "scripts": {
+    "r": "npx tsc && node clcl.js"
+  }
+}
