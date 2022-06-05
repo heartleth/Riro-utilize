@@ -39,7 +39,10 @@ export default class RiroQDB {
             this.concrete = new QuickDB({ filePath: './temp/fetched' + this.dbname });
         }
         else {
-            await this.riro.post(this.dbname, Buffer.from([]));
+            await this.riro.post({
+                body: Buffer.from([]),
+                filename: this.dbname
+            });
             list = await this.riro.list();
             fls = list.find(this.dbname);
             this.did = fls[0].did;
@@ -54,7 +57,10 @@ export default class RiroQDB {
     async update() {
         if (this.did) {
             const r = readFileSync('./temp/fetched' + this.dbname);
-            this.riro.post(this.dbname, Buffer.from(r.buffer));
+            this.riro.post({
+                filename: this.dbname,
+                body: Buffer.from(r.buffer)
+            });
             this.riro.delete(this.did);
             const list = await this.riro.list();
             let fls = list.find(this.dbname);

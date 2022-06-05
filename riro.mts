@@ -1,36 +1,11 @@
+import { RiroPostInfo, riropostmulti } from "./riro_functions/postmulti.mjs";
+import riropostfolder from "./riro_functions/postfolder.mjs";
+import rirodelete from "./riro_functions/delete.mjs";
+import riroinfo from "./riro_functions/info.mjs";
+import rirolist from "./riro_functions/list.mjs";
+import riropost from "./riro_functions/post.mjs";
+import riroget from "./riro_functions/get.mjs";
 import fetch from "node-fetch";
-
-function makeid(length :number) {
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-}
-
-function passive(c :any) {
-    let p :any = {
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-        'accept-encoding': 'gzip, deflate, br',
-        'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-        'cache-control': 'max-age=0',
-        'referer': 'https://cloud.riroschool.kr/drive/folders',
-        'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'same-origin',
-        'upgrade-insecure-requests': '1',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36'
-    };
-    for (const i in c) {
-        p[i] = c[i];
-    }
-    return p;
-}
 
 async function login(id :string, pw :string) {
     let awsalb :any = await fetch('https://cloud.riroschool.kr/member/login.php').then(e=>e.headers.get('set-cookie'));
@@ -67,100 +42,6 @@ async function login(id :string, pw :string) {
         const cldtok = cs.substring(0, cs.indexOf(';'));
         return { awsalb, awsalbcors, cloud_token: cldtok };
     }
-}
-
-function rirodelete(logininfo :any, did :number) {
-    let form = new URLSearchParams();
-    form.append('did', '0');
-    form.append('del_did', `${did}`);
-    return fetch('https://cloud.riroschool.kr/drive/folders', {
-        method: 'DELETE',
-        body: form,  
-        headers: passive({
-            cookie: logininfo.awsalb + '; ' + logininfo.cloud_token,
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'content-length': form.toString().length,
-            'referer': 'https://cloud.riroschool.kr/drive/folders?did=0',
-            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36',
-            'x-requested-with': 'XMLHttpRequest'
-        })
-    }).then(e => e.json());
-}
-
-function rirolist(logininfo :any, foldernum :number) {
-    return fetch('https://cloud.riroschool.kr/drive/folders/' + `${foldernum}` + '?_=1653467468063', {
-        method: 'GET', 
-        headers: passive({
-            cookie: logininfo.awsalb + '; ' + logininfo.cloud_token,
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'referer': 'https://cloud.riroschool.kr/drive/folders/' + `${foldernum}` + '?_=1653467468063',
-            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36',
-            'x-requested-with': 'XMLHttpRequest'
-        })
-    }).then(e => {
-        return e.json();
-    });
-}
-
-async function riropost(logininfo :any, filename :string, body :any, contenttype :any, foldernum :any) {
-    let r = makeid(16);
-    let buf = Buffer.from('------WebKitFormBoundary' + r + '\r\nContent-Disposition: form-data; name="did"\r\n\r\n0\r\n------WebKitFormBoundary' + r + '\r\nContent-Disposition: form-data; name="upfile[]"; filename="' + filename + '"\r\nContent-Type: ' + contenttype + '\r\n\r\n');
-    buf = Buffer.concat([buf, body, Buffer.from('\r\n------WebKitFormBoundary'+ r +'--')]);
-    
-    return fetch('https://cloud.riroschool.kr/drive/folders?did=' + foldernum, {
-        method: 'post',
-        body: buf,
-        headers: passive({
-            cookie: logininfo.cloud_token + ';' + logininfo.awsalb,
-            'accept': '*/*',
-            'accept-encoding': 'gzip, deflate, br',
-            'content-length': buf.length,
-            'content-type': 'multipart/form-data; boundary=----WebKitFormBoundary' + r,
-            'referer': 'https://cloud.riroschool.kr/drive/folders?did=' + `${foldernum}`,
-            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36',
-            'x-requested-with': 'XMLHttpRequest'
-        })
-    });
-}
-
-function riroget(logininfo :any, did :number) {
-    return fetch('https://cloud.riroschool.kr/drive/files/0?did=' + did + '&down_token=', {
-        method: 'GET', 
-        headers: passive({
-            cookie: logininfo.awsalb + '; ' + logininfo.cloud_token,
-            'accept-encoding': 'gzip, deflate, br',
-            'referer': 'https://cloud.riroschool.kr/drive/report',
-            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="101", "Google Chrome";v="101"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'document',
-            'sec-fetch-mode': 'navigate',
-            'sec-fetch-site': 'same-origin',
-            'sec-fetch-user': '?1',
-            'upgrade-insecure-requests': '1',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36'
-        })
-    });
 }
 
 class RiroFile {
@@ -201,7 +82,7 @@ class RiroFile {
     }
 
     path() {
-        return this.riro.pwd().then(e=>e.append(this.c));
+        return this.riro.pwd().then((e :RiroFileList)=>e.append(this.c));
     }
 };
 
@@ -238,15 +119,16 @@ class RiroFileList {
 
     append(x :any) {
         this.fl.push(x);
+        return this;
     }
 
-    *[Symbol.iterator]() {
+    *[Symbol.iterator]() :Generator<RiroFile> {
         for (const file of this.fl) {
             yield file
         }
     }
 
-    *files() {
+    *files() :Generator<RiroFile> {
         for (const file of this.fl) {
             if (!file.folder) {
                 yield new RiroFile(file, this.riro);
@@ -254,7 +136,7 @@ class RiroFileList {
         }
     }
 
-    *folders() {
+    *folders() :Generator<RiroFile> {
         for (const file of this.fl) {
             if (file.folder) {
                 yield new RiroFile(file, this.riro);
@@ -264,38 +146,78 @@ class RiroFileList {
 }
 
 export default class Riro {
+    public RiroPostInfo = RiroPostInfo;
     public RiroFileList = RiroFileList;
     public RiroFile = RiroFile;
     public logininfo :any;
     public cdc :number;
-    public "0" = false;
     
+    static async logined(id :string, pw :string) {
+        let r = new Riro();
+        await r.login(id, pw);
+        return r;
+    }
+
     constructor() {
         this.logininfo = {};
         this.cdc = 0
     }
+    
     async login(id :string, pw :string) {
         this.logininfo = await login(id, pw);
     }
+
     delete(did :number) {
         return rirodelete(this.logininfo, did);
     }
-    rawlist() {
-        return rirolist(this.logininfo, this.cdc);
+
+    rawlist(x? :number) {
+        return rirolist(this.logininfo, x ?? this.cdc);
     }
+
     pwd() {
-        return this.rawlist().then((e :any)=>e.path).then(e=>new RiroFileList(e, this))
+        return this.rawlist().then((e :any)=>e.path).then(e=>new RiroFileList(e, this));
     }
-    list() {
-        return this.rawlist().then((e:any)=>e.files).then(e=>new RiroFileList(e, this))
+
+    list(cd? :number) :Promise<RiroFileList> {
+        return this.rawlist(cd ?? this.cdc).then((e:any)=>e.files).then(e=>new RiroFileList(e, this));
     }
-    post(filename :string, body :any, contenttype :string = 'text/plain') {
-        return riropost(this.logininfo, filename, body, contenttype, this.cdc);
+
+    post(file :RiroPostInfo, did = this.cdc) {
+        return riropost(this.logininfo, file.filename, file.body, file.contenttype ?? 'text/plain', did);
     }
+    
+    post_folder(dname :string, bodies :RiroPostInfo[], did = this.cdc) {
+        return riropostmulti(this.logininfo, dname, bodies, did);
+    }
+
     get(did :number) {
         return riroget(this.logininfo, did);
     }
+
     cd(did :number) {
         this.cdc = did;
+    }
+
+    info(did :number) {
+        return riroinfo(this.logininfo, did);
+    }
+
+    pathdid(path :string): Promise<number> {
+        if (path == '/') { return Promise.resolve(0) };
+        return path.split('/').slice(1).reduce(async (c :Promise<number>, f :string)=>(await this.list(await c)).find(f).filter(e=>e.folder)[0].did, Promise.resolve(0));
+    }
+    
+    async mkdir(dname :string, did = this.cdc) {
+        await riropostfolder(this.logininfo, did, dname);
+        const d = (await this.list(did)).find(dname).filter(e=>e.folder)[0].did;
+        return {
+            get: () => this.cd(d),
+            did: d
+        };
+    }
+    
+    browse(cd = this.cdc) {
+        return 'https://cloud.riroschool.kr/drive/folders/' + cd;
     }
 };

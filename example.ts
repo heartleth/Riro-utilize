@@ -9,11 +9,10 @@ import { readFileSync } from 'fs';
     });
     await sq.connect();
 
-    sq.query
     sq.query('INSERT INTO mytable(val) VALUES(?);')?.run('임진왜란');
     sq.query('INSERT INTO mytable(val) VALUES(?);')?.run('정유재란');
-    sq.query('INSERT INTO mytable(val) VALUES(?);')?.run('병자호란');
     sq.query('INSERT INTO mytable(val) VALUES(?);')?.run('정묘호란');
+    sq.query('INSERT INTO mytable(val) VALUES(?);')?.run('병자호란');
     
     console.log(sq.query('SELECT * from mytable;')?.all());
     

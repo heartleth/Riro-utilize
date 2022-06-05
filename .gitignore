@@ -1,5 +1,8 @@
 /node_modules
 /*.*js
+*/*.*js
 /tsconfig.json
 /temp/
 /*.txt
+/package-lock.json
+/*.bat
