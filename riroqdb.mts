@@ -35,7 +35,7 @@ export default class RiroQDB {
         if (fls.length) {
             this.did = fls[0].did;
             const body = await fls[0].get();
-            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body.arrayBuffer()));
+            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body));
             this.concrete = new QuickDB({ filePath: './temp/fetched' + this.dbname });
         }
         else {
@@ -48,7 +48,7 @@ export default class RiroQDB {
             this.did = fls[0].did;
 
             const body = await fls[0].get();
-            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body.arrayBuffer()));
+            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body));
             this.concrete = new QuickDB({ filePath: './temp/fetched' + this.dbname });
         }
         return this;

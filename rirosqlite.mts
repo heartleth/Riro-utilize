@@ -37,7 +37,7 @@ export default class RiroSQLite {
         if (fls.length) {
             this.did = fls[0].did;
             const body = await fls[0].get();
-            writeFileSync(this.fpath, Buffer.from(await body.arrayBuffer()));
+            writeFileSync(this.fpath, Buffer.from(await body));
             this.concrete = new Database(this.fpath);
         }
         else {
@@ -50,7 +50,7 @@ export default class RiroSQLite {
             this.did = fls[0].did;
 
             const body = await fls[0].get();
-            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body.arrayBuffer()));
+            writeFileSync('./temp/fetched' + this.dbname, Buffer.from(await body));
             this.concrete = new Database(this.fpath);
         }
         return this;

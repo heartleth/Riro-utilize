@@ -1,3 +1,3 @@
 git add .
-git commit -m m
+git commit -m "post folder, info"
 git push origin main
