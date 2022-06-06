@@ -4,6 +4,7 @@
     "better-sqlite3": "^7.5.3",
     "form-data": "^4.0.0",
     "formdata-node": "^4.3.2",
+    "mime-type": "^4.0.0",
     "node-fetch": "^3.2.4",
     "quick.db": "^9.0.2"
   },

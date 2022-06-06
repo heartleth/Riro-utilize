@@ -1,11 +1,98 @@
-import { RiroPostInfo, riropostmulti } from "./riro_functions/postmulti.mjs";
+import { riropostmulti, riroposttruefolder } from "./riro_functions/postmulti.mjs";
 import riropostfolder from "./riro_functions/postfolder.mjs";
+import mime from './node_modules/mime-type/index.js';
 import rirodelete from "./riro_functions/delete.mjs";
 import riroinfo from "./riro_functions/info.mjs";
 import rirolist from "./riro_functions/list.mjs";
 import riropost from "./riro_functions/post.mjs";
 import riroget from "./riro_functions/get.mjs";
 import fetch from "node-fetch";
+import * as fs from "fs";
+import path from "path";
+
+type buildFile = {
+    name :string,
+    body :any,
+    contenttype? :string
+};
+
+type buildDir = {
+    name :string,
+    dir :(buildFile|buildDir)[]
+};
+
+export class RiroPostInfo {
+    public folder :boolean = false;
+    public contenttype? :string;
+    public name :string;
+    public body :any;
+    
+    constructor(a :string, b :any, c :string = 'text/plain') {
+        this.name = a;
+        this.body = b;
+        this.folder = false;
+    }
+
+    setname(x :string) {
+        this.name = x;
+        return this;
+    }
+
+    build() {
+        return {
+            name: this.name,
+            body: this.body,
+            contenttype: this.contenttype
+        }
+    }
+
+    static async frompath(fpath :string, buildup = '') :Promise<RiroTrueDir> {
+        if (fs.lstatSync(buildup + fpath).isDirectory()) {
+            const p = path.parse(buildup + fpath);
+            const entries = [...fs.readdirSync(buildup + fpath).entries()];
+            const d = new RiroPostDirInfo(p.base, await Promise.all(
+                entries.map(e=>RiroPostInfo.frompath(e[1], buildup + fpath + '/'))
+            ));
+
+            return d;
+        }
+        else {
+            const p = path.parse(buildup + fpath);
+            // @ts-ignore
+            return new RiroPostInfo(p.base, fs.readFileSync(buildup + fpath), (mime()).lookup(p.ext));
+        }
+    }
+
+    static build(b :buildDir|buildFile) :RiroTrueDir {
+        // @ts-ignore
+        if (b.body === undefined) {
+            // @ts-ignore
+            return new RiroPostDirInfo(b.name, b.dir.map(e=>RiroPostInfo.build(e)));
+        }
+        else {
+            // @ts-ignore
+            return new RiroPostInfo(b.name, b.body, b.contenttype);
+        }
+    }
+};
+
+export class RiroPostDirInfo {
+    public folder :boolean = true;
+    public dir :RiroTrueDir[];
+    public name :string;
+
+    constructor(n :string, x :RiroTrueDir[]) {
+        this.name = n,
+        this.dir = x;
+    }
+    
+    setname(x :string) {
+        this.name = x;
+        return this;
+    }
+}
+
+export type RiroTrueDir = (RiroPostInfo | RiroPostDirInfo);
 
 async function login(id :string, pw :string) {
     let awsalb :any = await fetch('https://cloud.riroschool.kr/member/login.php').then(e=>e.headers.get('set-cookie'));
@@ -44,7 +131,7 @@ async function login(id :string, pw :string) {
     }
 }
 
-class RiroFile {
+export class RiroFile {
     private c :any;
     public riro :Riro;
     public did :number;
@@ -86,7 +173,7 @@ class RiroFile {
     }
 };
 
-class RiroFileList {
+export class RiroFileList {
     public riro :Riro;
     private fl :Array<any>;
 
@@ -145,10 +232,7 @@ class RiroFileList {
     }
 }
 
-export default class Riro {
-    public RiroPostInfo = RiroPostInfo;
-    public RiroFileList = RiroFileList;
-    public RiroFile = RiroFile;
+export class Riro {
     public logininfo :any;
     public cdc :number;
     
@@ -182,9 +266,9 @@ export default class Riro {
     list(cd? :number) :Promise<RiroFileList> {
         return this.rawlist(cd ?? this.cdc).then((e:any)=>e.files).then(e=>new RiroFileList(e, this));
     }
-
+    
     post(file :RiroPostInfo, did = this.cdc) {
-        return riropost(this.logininfo, file.filename, file.body, file.contenttype ?? 'text/plain', did);
+        return riropost(this.logininfo, file.name, file.body, file.contenttype ?? 'text/plain', did);
     }
     
     post_folder(dname :string, bodies :RiroPostInfo[], did = this.cdc) {
@@ -219,5 +303,9 @@ export default class Riro {
     
     browse(cd = this.cdc) {
         return 'https://cloud.riroschool.kr/drive/folders/' + cd;
+    }
+
+    posttruefolder(d :RiroTrueDir, cd = this.cdc) {
+        return riroposttruefolder(this, d, cd);
     }
 };

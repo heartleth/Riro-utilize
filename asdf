@@ -1,0 +1,14 @@
+------WebKitFormBoundaryNVTEbEa3sVKV5B1g
+Content-Disposition: form-data; name="did"
+
+0
+------WebKitFormBoundaryNVTEbEa3sVKV5B1g
+Content-Disposition: form-data; name="upfile[]"; filename="exampledir2/bar.txt"
+Content-Type: text/plain
+
+foobar
+------WebKitFormBoundaryNVTEbEa3sVKV5B1g
+Content-Disposition: form-data; name="dir_name"
+
+exampledir2
+------WebKitFormBoundaryNVTEbEa3sVKV5B1g--

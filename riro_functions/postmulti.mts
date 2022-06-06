@@ -1,6 +1,8 @@
+import { Riro, RiroPostInfo, RiroTrueDir } from "../riro.mjs"
 import passive from "./passive.mjs";
+import riropost from "./post.mjs";
 import fetch from "node-fetch";
-import { writeFileSync } from "fs";
+import * as fs from "fs";
 
 function makeid(length :number) {
     var result           = '';
@@ -12,30 +14,20 @@ function makeid(length :number) {
     return result;
 }
 
-export class RiroPostInfo {
-    public contenttype? :string;
-    public filename :string;
-    public body :any;
-    constructor(a :string, b :any) {
-        this.filename=a;
-        this.body=b;
-    }
-};
-
 export function riropostmulti(logininfo :any, foldername :string, bodies :RiroPostInfo[], foldernum :number) {
     let r = makeid(16);
     let buf = Buffer.from('------WebKitFormBoundary' + r + '\r\nContent-Disposition: form-data; name="did"\r\n\r\n0');
     let bodybufs :Buffer[] = bodies.map(b => {
         const header = Buffer.from('\r\n------WebKitFormBoundary' + r
             + '\r\nContent-Disposition: form-data; name="upfile[]"; filename="'
-            + foldername + '/' + b.filename +
+            + foldername + '/' + b.name +
             '"\r\nContent-Type: ' + (b.contenttype ?? 'text/plain') + '\r\n\r\n');
         // console.log(b.body.toString());
         return Buffer.concat([header, Buffer.from(b.body)])
     });
         
     buf = Buffer.concat([buf, ...bodybufs, Buffer.from('\r\n------WebKitFormBoundary' + r + '\r\nContent-Disposition: form-data; name="dir_name"\r\n\r\n' + foldername + '\r\n------WebKitFormBoundary'+ r +'--')]);
-    writeFileSync('asdf', buf);
+    fs.writeFileSync('asdf', buf);
     
     return fetch('https://cloud.riroschool.kr/drive/folders?did=' + foldernum + '&dname=' + encodeURIComponent(foldername), {
         method: 'post',
@@ -57,4 +49,22 @@ export function riropostmulti(logininfo :any, foldername :string, bodies :RiroPo
             'x-requested-with': 'XMLHttpRequest'
         })
     });
+}
+
+export async function riroposttruefolder(riro :Riro, content :RiroTrueDir, did :number = 0) {
+    if (!content.folder) {
+        // @ts-ignore
+        await riro.post(content, did);
+    }
+    else {
+        // @ts-ignore
+        await riro.post_folder(content.name, content.dir.filter(e=>!e.folder), did);
+        const d2 = (await riro.list(did)).find(content.name).filter(e=>e.folder)[0].did;
+
+        // @ts-ignore
+        const folders = content.dir.filter(e=>e.folder);
+        for (let f of folders) {
+            await riroposttruefolder(riro, f, d2);
+        }
+    }
 }
